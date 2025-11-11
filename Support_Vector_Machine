@@ -1,0 +1,105 @@
+# importing dependencies
+import numpy as np
+# support Vector Machine Classifier
+class SVM_classifier():
+    # initializing the hyperparameters
+    def __init__(self, learning_rate, no_of_iterations, lambda_param):   # regularization parameter = lambda
+        self.learning_rate = learning_rate
+        self.no_of_iterations = no_of_iterations
+        self.lambda_param = lambda_param
+        
+    # function for fitting the model to the training data
+    def fit(self,x,y):
+        self.m, self.n = x.shape   # no.of rows and columns
+        self.w = np.zeros(self.n)  # weight is initialized to zero 
+        self.b = 0                 # bias is initialized to zero
+        self.x= x
+        self.y= y
+        # implementing gradient descent
+        for i in range(self.no_of_iterations):
+            self.update_weights()
+
+    # function for updating weight and bias value
+    def update_weights(self):
+        # label encoding
+        y_label= np.where(self.y <=0, -1,1)   # if y<=0 then -1 else 1
+        for idx, x_i in enumerate(self.x):     # enumerate to get index and value
+            condition = y_label[idx] * (np.dot(x_i, self.w) - self.b) >=1
+            if condition:
+                dw = 2 * self.lambda_param * self.w
+                db = 0
+            else:
+                dw = 2 * self.lambda_param * self.w - np.dot(x_i, y_label[idx])
+                db = y_label[idx]
+            # updating weight and bias
+            self.w = self.w - self.learning_rate * dw
+            self.b = self.b - self.learning_rate * db
+    # predicting the labels for given input values
+    def predict (self, x):  
+        output= np.dot(x, self.w) - self.b    
+        predicted_labels= np.sign(output)   # sign function to get -1 or 1
+        # converting -1 to 0
+        y_hat = np.where(predicted_labels <=-1, 0,1)
+        return y_hat   
+# creating self
+model = SVM_classifier(learning_rate =0.01, no_of_iterations=100, lambda_param=0.01)
+
+
+# importing dependencies for testing
+import pandas as pd 
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# data collecting and preprocessing
+diabetes_data = pd.read_csv('diabetes.csv')
+diabetes_data.head()
+# finding no of rows n columns
+diabetes_data.shape
+# getting the statistical measures of the data
+diabetes_data.describe()
+diabetes_data['Outcome'].value_counts()
+# separating the data and labels
+features = diabetes_data.drop(columns='Outcome', axis=1)
+target = diabetes_data['Outcome']
+print(features)
+print(target)
+# data Standardization
+scaler = StandardScaler()
+scaler.fit(features)
+standardized_data = scaler.transform(features)
+print(standardized_data)
+features = standardized_data
+target = diabetes_data['Outcome']
+
+# splitting the data into training and testing data
+x_train, x_test, y_train, y_test = train_test_split(standardized_data, target, test_size=0.2, random_state=2)
+print(features.shape, x_train.shape, x_test.shape)
+
+# training the SVM classifier
+classifier = SVM_classifier(learning_rate=0.01, no_of_iterations=100, lambda_param=0.01)
+classifier.fit(x_train, y_train)
+# accuracy score
+x_train_prediction = classifier.predict(x_train)
+training_data_accuracy = accuracy_score(y_train, x_train_prediction)
+print('Accuracy score of training data : ', training_data_accuracy)
+# accuracy on test data
+x_test_prediction = classifier.predict(x_test)
+test_data_accuracy = accuracy_score(y_test, x_test_prediction)
+print('Accuracy score of test data : ', test_data_accuracy)
+
+# building a predictive system
+input_data = (5,166,72,19,175,25.8,0.587,51)
+# changing the input_data to numpy array
+input_data_as_numpy_array = np.asarray(input_data)
+# reshaing
+input_data_reshaped = input_data_as_numpy_array.reshape(1,-1)
+# standardizing the input data
+std_data = scaler.transform(input_data_reshaped)
+# making prediction
+prediction = classifier.predict(std_data)
+print(prediction)
+if (prediction[0]==0):
+    print('The person is not diabetic')
+else:
+    print('The person is diabetic')    
