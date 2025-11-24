@@ -1,0 +1,53 @@
+# Lasso Regression
+# Y = wX +b     Y= dependent variable; X= independent variable; w= weight;  b= bias
+
+# importing libraries
+import numpy as np
+
+# creating a class for lasso regression
+class Lasso_Regression():
+    # initializing hyperparameters
+    def __init__(self, learning_rate, no_of_iterations, lambda_param):   # lambda_param is regularization parameter
+        self.learning_rate = learning_rate
+        self.no_of_iterations = no_of_iterations
+        self.lambda_param = lambda_param
+
+    # function for fitting the model to the training data
+    def fit(self, x, y):
+        self.m, self.n = x.shape   # no.of rows and columns
+        self.w = np.zeros(self.n)  # weight is initialized to zero 
+        self.b = 0                 # bias is initialized to zero
+        self.x= x
+        self.y= y
+        # implementing gradient descent
+        for i in range(self.no_of_iterations):
+            self.update_weights()
+
+    # function for updating weight and bias value
+    def update_weights(self):
+        y_predicted = np.dot(self.x, self.w) + self.b
+        # calculating gradients
+        dw = (-2 * (np.dot(self.x.T, (self.y - y_predicted))) + self.lambda_param * np.sign(self.w)) / self.m
+        db = -2 * np.sum(self.y - y_predicted) / self.m
+        # updating weight and bias
+        self.w = self.w - self.learning_rate * dw
+        self.b = self.b - self.learning_rate * db
+
+        # gradient ( dw, db)
+        for i in range( self.n):
+            if self.w[i] > 0:
+                dw[i] += self.lambda_param
+            elif self.w[i] < 0:
+                dw[i] -= self.lambda_param
+            else:
+                dw[i] += 0
+
+    # predicting the output for given input values
+    def predict(self, x):
+        y_predicted = np.dot(x, self.w) + self.b
+        return y_predicted
+    
+
+
+model = Lasso_Regression(learning_rate=0.01, no_of_iterations=1000, lambda_param=0.1)
+model.fit(X_train, y_train)    
